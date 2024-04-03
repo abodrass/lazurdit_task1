@@ -1,0 +1,174 @@
+﻿@page "/contacts"
+@using lazurdit_task1.Shared;
+@inject IContactService ContactService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Contacts</PageTitle>
+<h3>Contact List</h3>
+
+<select @bind="selectedSortField" class="form-select ">
+    <option value="Id">ID</option>
+    <option value="FirstName">First Name</option>
+    <option value="LastName">Last Name</option>
+    <option value="Email">Email</option>
+    <option value="PhoneNumber">Phone Number</option>
+</select>
+
+<table class="table ">
+    <thead>
+        <tr>
+            <th>Id <button @onclick="SortById" class="btn btn-secondary">Sort</button></th>
+            <th>First Name <button @onclick="SortByFirstName" class="btn btn-secondary">Sort</button></th>
+            <th>Last Name <button @onclick="SortByLastName" class="btn btn-secondary">Sort</button></th>
+            <th>Email <button @onclick="SortByEmail" class="btn btn-secondary">Sort</button></th>
+            <th>Phone Number <button @onclick="SortByPhoneNumber" class="btn btn-secondary">Sort</button></th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var contact in sortedContacts)
+        {
+            <tr>
+                <td>@contact.Id </td>
+                <button @onclick="()=> ShowUser(contact.Id)" class="btn btn-link">@contact.FirstName</button>
+                <td>@contact.LastName </td>
+                <td>@contact.Email  </td>
+                <td>@contact.PhoneNumber </td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=> ShowUser(contact.Id)"><i class="oi oi-pencil"></i></button>
+                </td>
+                <td>
+                    <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(contact)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary " @onclick="CreateContact">Create</button>
+
+@code {
+    List<lazurdit_task1.Shared.Contact> sortedContacts = new List<lazurdit_task1.Shared.Contact>();
+    bool flag = false;
+    string selectedSortField = "Id"; // Default sort field
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ContactService.GetContacts();
+        SortContacts();
+    }
+
+    void ShowUser(int id)
+    {
+        NavigationManager.NavigateTo($"user/{id}");
+    }
+
+    void CreateContact()
+    {
+        NavigationManager.NavigateTo("user");
+    }
+
+    async Task ShowDeleteConfirmation(lazurdit_task1.Shared.Contact contact)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete contact with ID {contact.Id}?");
+        if (confirmed)
+        {
+            await DeleteContact(contact.Id);
+        }
+    }
+
+    async Task DeleteContact(int id)
+    {
+        await ContactService.DeleteContact(id);
+        await OnInitializedAsync(); // Refresh the contact list after deletion
+    }
+
+    void SortById()
+    {
+        selectedSortField = "Id";
+        SortContacts();
+    }
+
+    void SortByFirstName()
+    {
+        selectedSortField = "FirstName";
+        SortContacts();
+    }
+
+    void SortByLastName()
+    {
+        selectedSortField = "LastName";
+        SortContacts();
+    }
+
+    void SortByEmail()
+    {
+        selectedSortField = "Email";
+        SortContacts();
+    }
+
+    void SortByPhoneNumber()
+    {
+        selectedSortField = "PhoneNumber";
+        SortContacts();
+    }
+
+    void SortContacts()
+    {
+        if (flag == false)
+        {
+            switch (selectedSortField)
+            {
+                case "Id":
+                    sortedContacts = ContactService.Contacts.OrderBy(c => c.Id).ToList();
+                    flag = true;
+                    break;
+                case "FirstName":
+                    sortedContacts = ContactService.Contacts.OrderBy(c => c.FirstName).ToList();
+                    flag = true;
+                    break;
+                case "LastName":
+                    sortedContacts = ContactService.Contacts.OrderBy(c => c.LastName).ToList();
+                    flag = true;
+                    break;
+                case "Email":
+                    sortedContacts = ContactService.Contacts.OrderBy(c => c.Email).ToList();
+                    flag = true;
+                    break;
+                case "PhoneNumber":
+                    sortedContacts = ContactService.Contacts.OrderBy(c => c.PhoneNumber).ToList();
+                    flag = true;
+                    break;
+            }
+        }
+        else
+        {
+            switch (selectedSortField)
+            {
+                case "Id":
+                    sortedContacts = ContactService.Contacts.OrderByDescending(c => c.Id).ToList();
+                    flag = false;
+                    break;
+                case "FirstName":
+                    sortedContacts = ContactService.Contacts.OrderByDescending(c => c.FirstName).ToList();
+                    flag = false;
+                    break;
+                case "LastName":
+                    sortedContacts = ContactService.Contacts.OrderByDescending(c => c.LastName).ToList();
+                    flag = false;
+                    break;
+                case "Email":
+                    sortedContacts = ContactService.Contacts.OrderByDescending(c => c.Email).ToList();
+                    flag = false;
+                    break;
+                case "PhoneNumber":
+                    sortedContacts = ContactService.Contacts.OrderByDescending(c => c.PhoneNumber).ToList();
+                    flag = false;
+                    break;
+            }
+            
+        }
+    }
+}

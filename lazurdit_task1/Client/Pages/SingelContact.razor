@@ -1,0 +1,77 @@
+﻿@page "/user"
+@page "/user/{id:int}"
+@inject IContactService ContactService
+
+<h3>SingelContact</h3>
+
+@if (Id == null)
+{
+    <PageTitle></PageTitle>
+    <h3>Create a new Contact</h3>
+}
+else
+{
+    <h3>Edit @contact1.FirstName @contact1.LastName</h3>
+}
+
+<EditForm Model="contact1" OnSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <div>
+        <label for="firstname">First Name</label>
+        <InputText id="firstname" @bind-Value="contact1.FirstName" class="form-control" />
+        <ValidationMessage For="@(() => contact1.FirstName)" />
+    </div>
+    <div>
+        <label for="lastname">Last Name</label>
+        <InputText id="lastname" @bind-Value="contact1.LastName" class="form-control" />
+        <ValidationMessage For="@(() => contact1.LastName)" />
+    </div>
+    <div>
+        <label for="Email">Email</label>
+        <InputText id="email" @bind-Value="contact1.Email" class="form-control" />
+        <ValidationMessage For="@(() => contact1.Email)" />
+    </div>
+    <div>
+        <label for="heroname">Phone</label>
+        <InputText id="phone" @bind-Value="contact1.PhoneNumber" class="form-control" />
+        <ValidationMessage For="@(() => contact1.PhoneNumber)" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@btnText</button>
+    <button type="button" class="btn btn-danger" @onclick="DeleteContact">Delete Contact</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    string btnText = string.Empty;
+    lazurdit_task1.Shared.Contact contact1 = new lazurdit_task1.Shared.Contact();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Save New User" : "Update User";
+
+        if (Id != null)
+        {
+            contact1 = await ContactService.GetSingleContact((int)Id);
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+        {
+            await ContactService.CreateContact(contact1);
+        }
+        else
+        {
+            await ContactService.UpdateContact(contact1);
+        }
+    }
+
+    async Task DeleteContact()
+    {
+        await ContactService.DeleteContact(contact1.Id);
+    }
+}
